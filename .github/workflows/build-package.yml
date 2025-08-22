@@ -1,0 +1,37 @@
+name: Build Lambda Deployment Package
+
+on:
+  # This allows you to run the build manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Create packaging directory and install dependencies
+      run: |
+        mkdir package_directory
+        pip install --upgrade -r requirements.txt -t ./package_directory
+
+    - name: Copy Lambda function into package
+      run: cp lambda_function.py ./package_directory/
+
+    - name: Create zip file
+      run: |
+        cd package_directory
+        zip -r ../deployment-package.zip .
+
+    - name: Upload artifact for download
+      uses: actions/upload-artifact@v4
+      with:
+        name: lambda-deployment-package
+        path: deployment-package.zip
