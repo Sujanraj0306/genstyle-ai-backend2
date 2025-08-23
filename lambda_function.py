@@ -18,7 +18,10 @@ def lambda_handler(event, context):
         selected_items = []
         # Check if the frontend sent a list of selected items
         if event.get('body'):
-            selected_items = json.loads(event['body'])
+            # An empty list from the frontend becomes '[]', which is valid JSON
+            body_content = json.loads(event['body'])
+            if body_content: # Ensure the list is not empty
+                 selected_items = body_content
 
         if selected_items:
             # If items were selected, fetch only those from DynamoDB
@@ -35,9 +38,14 @@ def lambda_handler(event, context):
         if not items_to_process:
             return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps([])}
 
+        # This is the corrected, complete prompt
         prompt_parts = [
-            "You are a virtual fashion stylist...", # Your prompt here
-            # ... (rest of your prompt)
+            "You are a virtual fashion stylist.",
+            "Analyze the following clothing items from a user's wardrobe. Each item has a unique 'itemId' provided after the image.",
+            "Create up to 3 best outfit combinations. An outfit must consist of one top and one bottom.",
+            "Return your answer ONLY as a valid JSON array of objects. Each object must have three keys: 'top_item_id' (string), 'bottom_item_id' (string), and 'suggestion' (string).",
+            "Do not include any other text, markdown, or explanations outside of the JSON array.",
+            "Here are the items:"
         ]
 
         for item in items_to_process:
